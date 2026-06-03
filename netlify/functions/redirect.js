@@ -1,27 +1,20 @@
-export default async (req) => {
-  const SHEET_ID = '1fTKLTpThQDb3ZufmpB1hkDE-bzHi-agF5kjGTFD7c4w';
-  const API_KEY = 'AIzaSyBiJv9G91lTfhzMuwm7WDS8fWi4DiCJ-CU';
+   import { getStore } from "@netlify/blobs";
 
-  const base = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!`;
-  
-  try {
-    const links = (await fetch(base + `A2:A3?key=${API_KEY}`).then(r=>r.json())).values.flat();
-    let contador = 0;
-    try {
-      const cont = await fetch(base + `B2?key=${API_KEY}`).then(r=>r.json());
-      contador = parseInt(cont.values[0][0]) || 0;
-    } catch(e) {}
-    
-    const link = links[contador % 2];
-    
-    await fetch(base + `B2?valueInputOption=RAW&key=${API_KEY}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values: [[contador + 1]] })
-    });
+   export default async () => {
+     const links = [
+       "https://wa.me/5411571471571",
+       "https://wa.me/541172345929"
+     ];
 
-    return Response.redirect(link, 302);
-  } catch (e) {
-    return Response.redirect('https://wa.me/541157714571', 302);
-  }
-}
+     const store = getStore("contador");
+     let i = await store.get("indice", { type: "json" });
+
+     if (i === null) i = 0;
+
+     const url = links[i];
+     const nextI = (i + 1) % 2;
+
+     await store.set("indice", JSON.stringify(nextI));
+
+     return Response.redirect(url, 302);
+   }
