@@ -15,27 +15,9 @@ exports.handler = async (event) => {
     const sheet = doc.sheetsByIndex[0];
     const rows = await sheet.getCells({ 'min-row': 1, 'max-row': 3, 'min-col': 2, 'max-col': 2 });
 
-    // 2. LEER NÚMEROS DE A2 Y A3 - VOS LOS CAMBIÁS ACÁ EN EL SHEET
-    // A2 = número 1 | A3 = número 2 | Siempre con 549 adelante
-    const numeroA2 = rows[1][0]?.value || '';
-    const numeroA3 = rows[2][0]?.value || '';
+    // 2. LEER NÚMEROS DE A2 Y A3
+    const numeroA2 = rows[1][0]?.value?.toString().trim() || 'VACIO';
+    const numeroA3 = rows[2][0]?.value?.toString().trim() || 'VACIO';
 
     // 3. ROTAR CADA 5 SEGUNDOS
-    const segundos = Math.floor(Date.now() / 1000);
-    const turno = segundos % 2 === 0? numeroA2 : numeroA3;
-
-    // 4. REDIRIGIR A WHATSAPP - SIN 549 DUPLICADO
-    return {
-      statusCode: 302,
-      headers: {
-        Location: `https://wa.me/${turno}`
-      }
-    };
-
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message })
-    };
-  }
-};
+    const segundos = Math.floor(Date.now
