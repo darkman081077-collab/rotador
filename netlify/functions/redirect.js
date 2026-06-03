@@ -7,15 +7,17 @@ exports.handler = async (event, context) => {
     const json = JSON.parse(text.substring(47).slice(0, -2));
     const rows = json.table.rows;
 
-    let num1 = String(rows[1]?.c[1]?.v || '');
-    let num2 = String(rows[2]?.c[1]?.v || '');
-    let counter = parseInt(rows[1]?.c[2]?.v || '0');
+    // A2 = rows[1], A3 = rows[2] porque fila 1 son títulos
+    let link1 = String(rows[1]?.c[0]?.v || '');
+    let link2 = String(rows[2]?.c[0]?.v || '');
 
-    num1 = num1.replace('https://wa.me/', '').replace(/\D/g, '');
-    num2 = num2.replace('https://wa.me/', '').replace(/\D/g, '');
+    // Limpiar: sacamos todo menos números
+    let num1 = link1.replace(/\D/g, '');
+    let num2 = link2.replace(/\D/g, '');
 
-    const target = counter % 2 === 0? num1 : num2;
-    counter++;
+    // Rota cada 30 segundos: 0-29 = A2, 30-59 = A3
+    const seconds = new Date().getSeconds();
+    const target = seconds < 30? num1 : num2;
 
     return {
       statusCode: 302,
