@@ -1,52 +1,35 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const { JWT } = require('google-auth-library');
 
-exports.handler = async (event) => {
-  try {
-    // 1. ARREGLAR LA KEY
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY;
-    const cleanKey = privateKey.split('\\n').join('\n');
+exports.handler = async function() {
+  const key = process.env.GOOGLE_PRIVATE_KEY;
+  const email = process.env.GOOGLE_CLIENT_EMAIL;
+  const sheetId = process.env.SHEET_ID;
 
-    // 2. CONECTAR A SHEETS
-    const serviceAccountAuth = new JWT({
-      email: process.env.GOOGLE_CLIENT_EMAIL,
-      key: cleanKey,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
-    });
+  const auth = new JWT({
+    email: email,
+    key: key.split('\\n').join('\n'),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
+  });
 
-    const doc = new GoogleSpreadsheet(process.env.SHEET_ID, serviceAccountAuth);
-    await doc.loadInfo();
-    const sheet = doc.sheetsByIndex[0];
+  const doc = new GoogleSpreadsheet(sheetId, auth);
+  await doc.loadInfo();
+  const sheet = doc.sheetsByIndex[0];
 
-    // 3. LEER B2 Y B3
-    await sheet.loadCells('B1:B3');
-    let numeroA2 = sheet.getCell(1, 1).value;
-    let numeroA3 = sheet.getCell(2, 1).value;
+  await sheet.loadCells('B2:B3');
+  const num1 = sheet.getCell(1, 1).value;
+  const num2 = sheet.getCell(2, 1).value;
 
-    if (!numeroA2) numeroA2 = 'VACIO';
-    if (!numeroA3) numeroA3 = 'VACIO';
+  const seg = Math.floor(Date.now() / 1000);
+  let num;
+  if (seg % 2 === 0) {
+    num = num1;
+  } else {
+    num = num2;
+  }
 
-    // 4. ROTAR CADA 5 SEG - SIN TERNARIO
-    const segundos = Math.floor(Date.now() / 1000);
-    let turno;
-    if (segundos % 2 === 0) {
-      turno = numeroA2;
-    } else {
-      turno = numeroA3;
-    }
-
-    // 5. DEBUG
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-      body: '=== DEBUG ROTADOR ===\n' +
-            'A2 Sheet: ' + numeroA2 + '\n' +
-            'A3 Sheet: ' + numeroA3 + '\n' +
-            'Segundos: ' + segundos + '\n' +
-            'Turno: ' + turno + '\n' +
-            'URL: https://wa.me/' + turno
-    };
-
-  } catch (error) {
-    return {
-      statusCode: 500,
+  return {
+    statusCode: 302,
+    headers: { Location: 'https://wa.me/' + num }
+  };
+};
