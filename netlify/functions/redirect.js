@@ -1,20 +1,13 @@
-   import { getStore } from "@netlify/blobs";
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1fTKLTpThQDb3ZufmpB1hkDE-bzHi-agF5kjGTFD7c4w/gviz/tq?tqx=out:json';
 
-   export default async () => {
-     const links = [
-       "https://wa.me/5411571471571",
-       "https://wa.me/541172345929"
-     ];
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
 
-     const store = getStore("contador");
-     let i = await store.get("indice", { type: "json" });
+    // Lee números del Google Sheet
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
 
-     if (i === null) i = 0;
-
-     const url = links[i];
-     const nextI = (i + 1) % 2;
-
-     await store.set("indice", JSON.stringify(nextI));
-
-     return Response.redirect(url, 302);
-   }
+    // Google devuelve JSONP, hay que limpiarlo
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+    const rows = json.table.rows;
