@@ -13,11 +13,33 @@ exports.handler = async (event) => {
     const doc = new GoogleSpreadsheet(process.env.SHEET_ID, serviceAccountAuth);
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
-    const rows = await sheet.getCells({ 'min-row': 1, 'max-row': 3, 'min-col': 2, 'max-col': 2 });
 
-    // 2. LEER NÚMEROS DE A2 Y A3
-    const numeroA2 = rows[1][0]?.value?.toString().trim() || 'VACIO';
-    const numeroA3 = rows[2][0]?.value?.toString().trim() || 'VACIO';
+    // FIX: getCells necesita objeto, no string
+    await sheet.loadCells('B1:B3');
+    const numeroA2 = sheet.getCell(1, 1).value?.toString().trim() || 'VACIO';
+    const numeroA3 = sheet.getCell(2, 1).value?.toString().trim() || 'VACIO';
 
-    // 3. ROTAR CADA 5 SEGUNDOS
-    const segundos = Math.floor(Date.now
+    // 2. ROTAR CADA 5 SEGUNDOS
+    const segundos = Math.floor(Date.now() / 1000);
+    const turno = (segundos % 2 === 0)? numeroA2 : numeroA3;
+
+    // 3. DEBUG: MOSTRAR QUÉ LEE
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      body: `=== DEBUG ROTADOR ===
+A2 Sheet: ${numeroA2}
+A3 Sheet: ${numeroA3}
+Segundos: ${segundos}
+Turno actual: ${turno}
+URL WhatsApp: https://wa.me/${turno}`
+    };
+
+  } catch (error) {
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'text/plain' },
+      body: `ERROR: ${error.message}`
+    };
+  }
+};
